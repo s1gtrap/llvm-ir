@@ -103,7 +103,7 @@ impl Module {
     }
 
     /// Parse the LLVM text IR (.ll) file at the given path to create a `Module`
-    pub fn from_ir(s: &str) -> Result<Self, String> {
+    pub fn from_ir(data: &str) -> Result<Self, String> {
         unsafe fn parse_ir(
             context_ref: LLVMContextRef,
             mem_buf: LLVMMemoryBufferRef,
@@ -132,14 +132,14 @@ impl Module {
         use std::ffi::{CStr, CString};
         use std::mem;
 
-        let data = "";
-        let name = "";
+        let cstr = CString::new(data).expect("failed to terminate data");
+        let name = "\0";
         let memory_buffer = unsafe {
             LLVMCreateMemoryBufferWithMemoryRange(
-                data.as_ptr() as *const std::ffi::c_char,
+                cstr.as_ptr() as *const std::ffi::c_char,
                 data.len(),
                 name.as_ptr() as *const std::ffi::c_char,
-                0,
+                1,
             )
         };
         debug!("Created a MemoryBuffer");
@@ -233,13 +233,60 @@ impl Module {
 }
 
 #[test]
-fn test_asdasd() {
+fn test_module_from_ir() {
     assert_eq!(
         Module::from_ir("").unwrap(),
         Module {
             name: "".to_owned(),
             source_file_name: "".to_owned(),
-            data_layout: DataLayout {},
+            data_layout: DataLayout {
+                layout_str: "".to_owned(),
+                endianness: Endianness::BigEndian,
+                stack_alignment: None,
+                program_address_space: 0,
+                alloca_address_space: 0,
+                alignments: Alignments {
+                    int_alignments: BTreeMap::from([
+                        (1, Alignment { abi: 8, pref: 8 }),
+                        (8, Alignment { abi: 8, pref: 8 }),
+                        (16, Alignment { abi: 16, pref: 16 }),
+                        (32, Alignment { abi: 32, pref: 32 }),
+                        (64, Alignment { abi: 32, pref: 64 }),
+                    ]),
+                    vec_alignments: BTreeMap::from([
+                        (64, Alignment { abi: 64, pref: 64 }),
+                        (
+                            128,
+                            Alignment {
+                                abi: 128,
+                                pref: 128
+                            }
+                        ),
+                    ]),
+                    fp_alignments: HashMap::from([
+                        (64, Alignment { abi: 64, pref: 64 }),
+                        (
+                            128,
+                            Alignment {
+                                abi: 128,
+                                pref: 128
+                            }
+                        ),
+                        (16, Alignment { abi: 16, pref: 16 }),
+                        (32, Alignment { abi: 32, pref: 32 }),
+                    ]),
+                    agg_alignment: Alignment { abi: 0, pref: 64 },
+                    fptr_alignment: FunctionPtrAlignment {
+                        independent: true,
+                        abi: 64,
+                    },
+                    fptr_alignment_as_alignment: Alignment { abi: 64, pref: 64 },
+                    pointer_layouts: HashMap::new(),
+                },
+                mangling: None,
+                native_int_widths: None,
+                non_integral_ptr_types: HashSet::new(),
+            },
             target_triple: None,
             functions: vec![],
             func_declarations: vec![],
@@ -484,7 +531,7 @@ pub struct PointerLayout {
 
 /// Alignment for various types in memory.
 /// See [LLVM 14 docs on Data Layout](https://releases.llvm.org/14.0.0/docs/LangRef.html#data-layout)
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Alignments {
     /// Explicit alignments for various sizes of integers (in bits). Sizes not
     /// specified here are determined according to the rules described in the

@@ -239,61 +239,6 @@ fn test_module_from_ir() {
         Module {
             name: "".to_owned(),
             source_file_name: "".to_owned(),
-            data_layout: DataLayout {
-                layout_str: "".to_owned(),
-                endianness: Endianness::BigEndian,
-                stack_alignment: None,
-                program_address_space: 0,
-                alloca_address_space: 0,
-                alignments: Alignments {
-                    int_alignments: BTreeMap::from([
-                        (1, Alignment { abi: 8, pref: 8 }),
-                        (8, Alignment { abi: 8, pref: 8 }),
-                        (16, Alignment { abi: 16, pref: 16 }),
-                        (32, Alignment { abi: 32, pref: 32 }),
-                        (64, Alignment { abi: 32, pref: 64 }),
-                    ]),
-                    vec_alignments: BTreeMap::from([
-                        (64, Alignment { abi: 64, pref: 64 }),
-                        (
-                            128,
-                            Alignment {
-                                abi: 128,
-                                pref: 128
-                            }
-                        ),
-                    ]),
-                    fp_alignments: HashMap::from([
-                        (64, Alignment { abi: 64, pref: 64 }),
-                        (
-                            128,
-                            Alignment {
-                                abi: 128,
-                                pref: 128
-                            }
-                        ),
-                        (16, Alignment { abi: 16, pref: 16 }),
-                        (32, Alignment { abi: 32, pref: 32 }),
-                    ]),
-                    agg_alignment: Alignment { abi: 0, pref: 64 },
-                    fptr_alignment: FunctionPtrAlignment {
-                        independent: true,
-                        abi: 64,
-                    },
-                    fptr_alignment_as_alignment: Alignment { abi: 64, pref: 64 },
-                    pointer_layouts: HashMap::from([(
-                        0,
-                        PointerLayout {
-                            size: 64,
-                            alignment: Alignment { abi: 64, pref: 64 },
-                            index_size: 64
-                        }
-                    )]),
-                },
-                mangling: None,
-                native_int_widths: None,
-                non_integral_ptr_types: HashSet::new(),
-            },
             target_triple: Some("".to_owned()),
             functions: vec![],
             func_declarations: vec![],
@@ -302,6 +247,7 @@ fn test_module_from_ir() {
             global_ifuncs: vec![],
             inline_assembly: "".to_owned(),
             types: Types::blank_for_testing(),
+            ..Default::default()
         }
     );
 }

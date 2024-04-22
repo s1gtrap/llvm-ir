@@ -253,6 +253,42 @@ impl Default for Module {
 #[test]
 fn test_module_from_ir() {
     assert_eq!(Module::from_ir("").unwrap(), Module::default());
+    // assert_eq!(Module::from_ir("").unwrap(), Module { // TODO: test name field
+    //     name: "".to_owned(),
+    //     ..Default::default
+    // });
+    assert_eq!(
+        Module::from_ir(r#"source_filename = "/path/to/source.c""#).unwrap(),
+        Module {
+            source_file_name: "/path/to/source.c".to_owned(),
+            ..Default::default()
+        },
+    );
+    assert_eq!(
+        Module::from_ir(r#"target datalayout = "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128""#).unwrap(),
+        Module {
+            data_layout: DataLayout {
+                layout_str: "e-m:o-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128".to_owned(),
+                endianness: Endianness::LittleEndian,
+                stack_alignment: Some(128),
+                program_address_space: 0,
+                alloca_address_space: 0,
+                alignments: Alignments::default(),
+                mangling: Some(Mangling::MachO),
+                native_int_widths: Some(HashSet::from([16, 64, 32, 8])),
+                non_integral_ptr_types: HashSet::new(),
+            },
+            .. Default::default()
+        },
+    );
+    assert_eq!(
+        Module::from_ir(r#"target triple = "x86_64-apple-macosx10.7.0""#).unwrap(),
+        Module {
+            target_triple: Some("x86_64-apple-macosx10.7.0".to_owned()),
+            ..Default::default()
+        },
+    );
+    // TODO: test remaining fields
 }
 
 /// See [LLVM 14 docs on Global Variables](https://releases.llvm.org/14.0.0/docs/LangRef.html#global-variables)

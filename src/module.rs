@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
 /// See [LLVM 14 docs on Module Structure](https://releases.llvm.org/14.0.0/docs/LangRef.html#module-structure)
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Module {
     /// The name of the module
     pub name: String,
@@ -232,13 +232,12 @@ impl Module {
     }
 }
 
-#[test]
-fn test_module_from_ir() {
-    assert_eq!(
-        Module::from_ir("").unwrap(),
+impl Default for Module {
+    fn default() -> Self {
         Module {
             name: "".to_owned(),
             source_file_name: "".to_owned(),
+            data_layout: Default::default(),
             target_triple: Some("".to_owned()),
             functions: vec![],
             func_declarations: vec![],
@@ -247,9 +246,13 @@ fn test_module_from_ir() {
             global_ifuncs: vec![],
             inline_assembly: "".to_owned(),
             types: Types::blank_for_testing(),
-            ..Default::default()
         }
-    );
+    }
+}
+
+#[test]
+fn test_module_from_ir() {
+    assert_eq!(Module::from_ir("").unwrap(), Module::default());
 }
 
 /// See [LLVM 14 docs on Global Variables](https://releases.llvm.org/14.0.0/docs/LangRef.html#global-variables)

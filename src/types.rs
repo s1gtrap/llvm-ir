@@ -974,6 +974,12 @@ impl Types {
     }
 }
 
+impl Default for Types {
+    fn default() -> Self {
+        Types::blank_for_testing()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 struct TypeCache<K: Eq + Hash + Clone> {
     map: HashMap<K, TypeRef>,

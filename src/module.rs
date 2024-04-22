@@ -8,7 +8,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
 /// See [LLVM 14 docs on Module Structure](https://releases.llvm.org/14.0.0/docs/LangRef.html#module-structure)
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Module {
     /// The name of the module
     pub name: String,
@@ -129,7 +129,7 @@ impl Module {
         }
 
         // implementation here inspired by the `inkwell` crate's `Module::parse_bitcode_from_path`
-        use std::ffi::{CStr, CString};
+        use std::ffi::CString;
         use std::mem;
 
         let cstr = CString::new(data).expect("failed to terminate data");

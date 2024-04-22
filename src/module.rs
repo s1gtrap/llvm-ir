@@ -281,13 +281,20 @@ fn test_module_from_ir() {
                         abi: 64,
                     },
                     fptr_alignment_as_alignment: Alignment { abi: 64, pref: 64 },
-                    pointer_layouts: HashMap::new(),
+                    pointer_layouts: HashMap::from([(
+                        0,
+                        PointerLayout {
+                            size: 64,
+                            alignment: Alignment { abi: 64, pref: 64 },
+                            index_size: 64
+                        }
+                    )]),
                 },
                 mangling: None,
                 native_int_widths: None,
                 non_integral_ptr_types: HashSet::new(),
             },
-            target_triple: None,
+            target_triple: Some("".to_owned()),
             functions: vec![],
             func_declarations: vec![],
             global_vars: vec![],

@@ -28,7 +28,10 @@ fn main() {
         versions.push(17);
     }
     match versions.len() {
-        0 => panic!("llvm-ir: Please select an LLVM version using a Cargo feature."),
+        0 =>  {
+            #[cfg(not(all(feature = "serde", feature = "serde_json")))]
+            panic!("llvm-ir: Please select an LLVM version using a Cargo feature.");
+        }
         1 => {},
         _ => panic!("llvm-ir: Multiple LLVM versions selected. Please activate only one LLVM version feature. (Got {:?})", versions),
     };

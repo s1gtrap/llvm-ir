@@ -291,6 +291,70 @@ fn test_module_from_ir() {
     // TODO: test remaining fields
 }
 
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Module {
+    fn deserialize<D>(deserializer: D) -> Result<Module, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let json: serde_json::value::Value = serde_json::value::Value::deserialize(deserializer)?;
+        let name = json.get("Name").unwrap().as_str().unwrap().to_string();
+        let source_file_name = json
+            .get("SourceFileName")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_string();
+        let target_triple = json.get("TargetTriple").map(serde_json::Value::to_string);
+
+        Ok(Module {
+            name,
+            source_file_name,
+            data_layout: DataLayout::default(), // TODO: impl
+            target_triple,
+            functions: vec![],              // TODO: impl
+            func_declarations: vec![],      // TODO: impl
+            global_vars: vec![],            // TODO: impl
+            global_aliases: vec![],         // TODO: impl
+            global_ifuncs: vec![],          // TODO: impl
+            inline_assembly: String::new(), // TODO: impl
+            types: Types::default(),        // TODO: impl
+        })
+    }
+}
+
+#[test]
+#[cfg(feature = "serde")]
+fn test_module_from_json() {
+    let module: Module = serde_json::from_str(
+        r#"{
+ "Name": "",
+ "SourceFileName": "",
+ "AliasList": [],
+ "FunctionList": [],
+ "GlobalList": [],
+ "IFuncList": []
+}"#,
+    )
+    .unwrap();
+    assert_eq!(
+        module,
+        Module {
+            name: "".to_string(),
+            source_file_name: "".to_string(),
+            data_layout: DataLayout::default(),
+            target_triple: None,
+            functions: vec![],
+            func_declarations: vec![],
+            global_vars: vec![],
+            global_aliases: vec![],
+            global_ifuncs: vec![],
+            inline_assembly: String::new(),
+            types: Types::default(),
+        },
+    );
+}
+
 /// See [LLVM 14 docs on Global Variables](https://releases.llvm.org/14.0.0/docs/LangRef.html#global-variables)
 #[derive(PartialEq, Clone, Debug)]
 pub struct GlobalVariable {
@@ -692,11 +756,7 @@ use crate::from_llvm::*;
 use crate::function::AttributesData;
 use llvm_sys::comdat::*;
 use llvm_sys::{
-    LLVMDLLStorageClass,
-    LLVMLinkage,
-    LLVMThreadLocalMode,
-    LLVMUnnamedAddr,
-    LLVMVisibility,
+    LLVMDLLStorageClass, LLVMLinkage, LLVMThreadLocalMode, LLVMUnnamedAddr, LLVMVisibility,
 };
 
 /// This struct contains data used when translating llvm-sys objects into our
@@ -1022,7 +1082,7 @@ impl DataLayout {
                 let addr_space: AddrSpace = if first_chunk == "p" {
                     0
                 } else {
-                    first_chunk[1 ..]
+                    first_chunk[1..]
                         .parse()
                         .expect("datalayout 'p': Failed to parse address space")
                 };
@@ -1064,7 +1124,7 @@ impl DataLayout {
             } else if spec.starts_with('i') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
-                let size: u32 = first_chunk[1 ..]
+                let size: u32 = first_chunk[1..]
                     .parse()
                     .expect("datalayout 'i': Failed to parse size");
                 let second_chunk = chunks
@@ -1088,7 +1148,7 @@ impl DataLayout {
             } else if spec.starts_with('v') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
-                let size: u32 = first_chunk[1 ..]
+                let size: u32 = first_chunk[1..]
                     .parse()
                     .expect("datalayout 'v': Failed to parse size");
                 let second_chunk = chunks
@@ -1112,7 +1172,7 @@ impl DataLayout {
             } else if spec.starts_with('f') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
-                let size: u32 = first_chunk[1 ..]
+                let size: u32 = first_chunk[1..]
                     .parse()
                     .expect("datalayout 'f': Failed to parse size");
                 let second_chunk = chunks
@@ -1206,7 +1266,7 @@ impl DataLayout {
                     .get_or_insert_with(HashSet::new);
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
-                let size = first_chunk[1 ..]
+                let size = first_chunk[1..]
                     .parse()
                     .expect("datalayout 'n': Failed to parse first size");
                 native_int_widths.insert(size);

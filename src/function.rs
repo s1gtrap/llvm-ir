@@ -9,7 +9,7 @@ use crate::{BasicBlock, ConstantRef, Name};
 pub struct Function {
     #[serde(rename = "GlobalIdentifier")]
     pub name: String,
-    #[serde(skip)]
+    #[serde(rename = "Params")]
     pub parameters: Vec<Parameter>,
     #[serde(skip)]
     pub is_var_arg: bool,
@@ -112,9 +112,13 @@ pub struct FunctionDeclaration {
 }
 
 #[derive(PartialEq, Clone, Debug)]
+#[cfg_attr(feature = "json", derive(serde::Deserialize))]
 pub struct Parameter {
+    #[serde(rename = "Name")]
     pub name: Name,
+    #[serde(rename = "Type")]
     pub ty: TypeRef,
+    #[serde(skip)]
     pub attributes: Vec<ParameterAttribute>,
 }
 

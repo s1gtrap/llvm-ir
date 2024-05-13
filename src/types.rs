@@ -84,6 +84,123 @@ pub enum Type {
     TargetExtType, // TODO ideally we want something like TargetExtType { name: String, contained_types: Vec<TypeRef>, contained_ints: Vec<u32> }
 }
 
+#[cfg(feature = "json")]
+use serde::de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
+
+#[cfg(feature = "json")]
+impl<'de> Deserialize<'de> for Type {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        enum Field {
+            Secs,
+            Nanos,
+        }
+
+        // This part could also be generated independently by:
+        //
+        //    #[derive(Deserialize)]
+        //    #[serde(field_identifier, rename_all = "lowercase")]
+        //    enum Field { Secs, Nanos }
+        impl<'de> Deserialize<'de> for Field {
+            fn deserialize<D>(deserializer: D) -> Result<Field, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                struct FieldVisitor;
+
+                impl<'de> Visitor<'de> for FieldVisitor {
+                    type Value = Field;
+
+                    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                        formatter.write_str("`secs` or `nanos`")
+                    }
+
+                    fn visit_str<E>(self, value: &str) -> Result<Field, E>
+                    where
+                        E: de::Error,
+                    {
+                        match value {
+                            "secs" => Ok(Field::Secs),
+                            "nanos" => Ok(Field::Nanos),
+                            _ => Err(de::Error::unknown_field(value, FIELDS)),
+                        }
+                    }
+                }
+
+                deserializer.deserialize_identifier(FieldVisitor)
+            }
+        }
+
+        struct DurationVisitor;
+
+        impl<'de> Visitor<'de> for DurationVisitor {
+            type Value = Type;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct Duration")
+            }
+
+            /*fn visit_seq<V>(self, mut seq: V) -> Result<Type, V::Error>
+            where
+                V: SeqAccess<'de>,
+            {
+                let secs = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(0, &self))?;
+                let nanos = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+                Ok(Duration::new(secs, nanos))
+            }*/
+
+            fn visit_map<V>(self, mut map: V) -> Result<Type, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut ty = Type::VoidType;
+                let mut name = "";
+
+                while let Some(key) = map.next_key::<&str>()? {
+                    match key {
+                        "ID" => {
+                            ty = match map.next_value::<usize>()? {
+                                i @ (0 .. 7) => todo!("{i}"),
+                                7 => Type::VoidType,
+                                8 => Type::LabelType,
+                                i @ (9 .. 13) => todo!("{i}"),
+                                13 => Type::IntegerType {
+                                    bits: 32, // TODO: impl
+                                },
+                                i @ (14 .. 15) => todo!("{i}"),
+                                15 => Type::PointerType {
+                                    #[cfg(feature = "llvm-14-or-lower")]
+                                    pointee_type: TypeRef(Arc::new(Type::VoidType)), // TODO: impl
+                                    addr_space: AddrSpace::default(), // TODO: impl
+                                },
+                                i @ (16 ..) => todo!("{i}"),
+                            };
+                        },
+                        "Name" => {
+                            name = map.next_value::<&str>()?;
+                        },
+                        "Subtypes" => {
+                            map.next_value::<Vec<Type>>();
+                        },
+                        _ => unreachable!(),
+                    }
+                }
+
+                Ok(ty)
+            }
+        }
+
+        const FIELDS: &[&str] = &["ID", "Name", "Subtypes"];
+        deserializer.deserialize_struct("Duration", FIELDS, DurationVisitor)
+    }
+}
+
 impl Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -224,6 +341,7 @@ impl Display for FPType {
 // This is important because it allows multiple threads to simultaneously access
 // a single (immutable) `Module`.
 #[derive(PartialEq, Eq, Clone, Debug, Hash)]
+#[cfg_attr(feature = "json", derive(serde::Deserialize))]
 pub struct TypeRef(Arc<Type>);
 
 impl Default for TypeRef {

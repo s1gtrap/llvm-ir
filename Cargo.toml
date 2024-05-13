@@ -13,7 +13,7 @@ license = "MIT"
 [dependencies]
 either = "1.9"
 log = "0.4"
-serde = { version = "1.0.201", features = ["derive"], optional = true }
+serde = { version = "1.0.201", features = ["derive", "rc"], optional = true }
 serde_json = { version = "1.0.117", optional = true }
 
 [dev-dependencies]

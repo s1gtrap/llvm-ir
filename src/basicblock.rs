@@ -8,7 +8,7 @@ use crate::terminator::Terminator;
 #[derive(PartialEq, Clone, Debug)]
 #[cfg_attr(feature = "json", derive(serde::Deserialize))]
 pub struct BasicBlock {
-    #[serde(skip)]
+    #[serde(rename = "Name")]
     pub name: Name,
     #[serde(skip)]
     pub instrs: Vec<Instruction>,

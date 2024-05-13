@@ -3,6 +3,8 @@ use std::fmt;
 /// Many LLVM objects have a `Name`, which is either a string name, or just a
 /// sequential numbering (e.g. `%3`).
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Hash)]
+#[cfg_attr(feature = "json", derive(serde::Deserialize))]
+#[serde(untagged)]
 pub enum Name {
     /// has a string name
     // with `Box`, the enum `Name` has size 16 bytes, vs with a `String`

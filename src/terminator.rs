@@ -25,6 +25,15 @@ pub enum Terminator {
     CallBr(CallBr),
 }
 
+impl Default for Terminator {
+    fn default() -> Self {
+        Terminator::Ret(Ret {
+            return_operand: None,
+            debugloc: None,
+        })
+    }
+}
+
 /// The [`Type`](../enum.Type.html) of a `Terminator` is its result type.
 /// For most terminators, this is `VoidType`.
 /// For instance, a [`Ret`](struct.Ret.html) instruction has void type even if
@@ -628,14 +637,18 @@ impl Display for CallBr {
 // from_llvm //
 // ********* //
 
+#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
+#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
+#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMOpcode;
 
 impl Terminator {
     #[rustfmt::skip] // so we can keep all of the match arms consistent
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -689,6 +702,7 @@ impl Terminator {
 }
 
 impl Ret {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -711,6 +725,7 @@ impl Ret {
 }
 
 impl Br {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(term: LLVMValueRef, func_ctx: &mut FunctionContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
@@ -726,6 +741,7 @@ impl Br {
 }
 
 impl CondBr {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -751,6 +767,7 @@ impl CondBr {
 }
 
 impl Switch {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -786,6 +803,7 @@ impl Switch {
 }
 
 impl IndirectBr {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -812,6 +830,7 @@ impl IndirectBr {
 }
 
 impl Invoke {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -845,6 +864,7 @@ impl Invoke {
 }
 
 impl Resume {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -860,6 +880,7 @@ impl Resume {
 }
 
 impl Unreachable {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(term: LLVMValueRef) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 0);
         Self {
@@ -870,6 +891,7 @@ impl Unreachable {
 }
 
 impl CleanupRet {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -905,6 +927,7 @@ impl CleanupRet {
 }
 
 impl CatchRet {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -924,6 +947,7 @@ impl CatchRet {
 }
 
 impl CatchSwitch {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -969,6 +993,7 @@ impl CatchSwitch {
 }
 
 impl CallBr {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,

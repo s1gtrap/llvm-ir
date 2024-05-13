@@ -5,26 +5,44 @@ use crate::{BasicBlock, ConstantRef, Name};
 
 /// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
 #[derive(PartialEq, Clone, Debug)]
+#[cfg_attr(feature = "json", derive(serde::Deserialize))]
 pub struct Function {
+    #[serde(rename = "GlobalIdentifier")]
     pub name: String,
+    #[serde(skip)]
     pub parameters: Vec<Parameter>,
+    #[serde(skip)]
     pub is_var_arg: bool,
+    #[serde(skip)]
     pub return_type: TypeRef,
+    #[serde(rename = "BasicBlock")]
     pub basic_blocks: Vec<BasicBlock>,
+    #[serde(skip)]
     pub function_attributes: Vec<FunctionAttribute>, // llvm-hs-pure has Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID ones come about
+    #[serde(skip)]
     pub return_attributes: Vec<ParameterAttribute>,
+    #[serde(skip)]
     pub linkage: Linkage,
+    #[serde(skip)]
     pub visibility: Visibility,
+    #[serde(skip)]
     pub dll_storage_class: DLLStorageClass, // llvm-hs-pure has Option<DLLStorageClass>, but the llvm_sys api doesn't look like it can fail
+    #[serde(skip)]
     pub calling_convention: CallingConvention,
+    #[serde(skip)]
     pub section: Option<String>,
+    #[serde(skip)]
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String>, I'm not sure why
+    #[serde(skip)]
     pub alignment: u32,
     /// See [LLVM 14 docs on Garbage Collector Strategy Names](https://releases.llvm.org/14.0.0/docs/LangRef.html#gc)
+    #[serde(skip)]
     pub garbage_collector_name: Option<String>,
     // pub prefix: Option<ConstantRef>,  // appears to not be exposed in the LLVM C API, only the C++ API
     /// Personalities are used for exception handling. See [LLVM 14 docs on Personality Function](https://releases.llvm.org/14.0.0/docs/LangRef.html#personalityfn)
+    #[serde(skip)]
     pub personality_function: Option<ConstantRef>,
+    #[serde(skip)]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -157,6 +175,12 @@ pub enum CallingConvention {
     Numbered(u32),
 }
 
+impl Default for CallingConvention {
+    fn default() -> Self {
+        CallingConvention::C
+    }
+}
+
 /// Describes how a given location in memory can be accessed.
 /// See [LLVM 16 docs on FunctionAttributes](https://releases.llvm.org/16.0.0/docs/LangRef.html#fnattrs),
 /// the section on memory(...)
@@ -165,18 +189,18 @@ pub enum MemoryEffect {
     None,
     Read,
     Write,
-    ReadWrite
+    ReadWrite,
 }
 
 impl MemoryEffect {
     // See https://github.com/llvm/llvm-project/blob/7cbf1a2591520c2491aa35339f227775f4d3adf6/llvm/include/llvm/Support/ModRef.h#L27
-    pub(crate) fn from_llvm_bits(val : u64) -> Self {
+    pub(crate) fn from_llvm_bits(val: u64) -> Self {
         match val {
             0b00 => Self::None,
             0b01 => Self::Read,
             0b10 => Self::Write,
             0b11 => Self::ReadWrite,
-            _ => panic!("Memory effect given unexpected bits {}", val)
+            _ => panic!("Memory effect given unexpected bits {}", val),
         }
     }
 }
@@ -242,7 +266,7 @@ pub enum FunctionAttribute {
     Memory {
         default: MemoryEffect,
         argmem: MemoryEffect,
-        inaccessible_mem: MemoryEffect
+        inaccessible_mem: MemoryEffect,
     },
     StringAttribute {
         kind: String,
@@ -304,12 +328,16 @@ pub type GroupID = usize;
 // ********* //
 
 use crate::constant::Constant;
+#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
+#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 #[cfg(feature = "llvm-12-or-greater")]
 use crate::types::TypesBuilder;
+#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::comdat::*;
+#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -320,16 +348,21 @@ pub(crate) struct FunctionContext<'a> {
     /// Map from llvm-sys basic block to its `Name`
     // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
     #[allow(clippy::mutable_key_type)]
+    #[cfg(feature = "no-llvm")]
+    phantom: &'a std::marker::PhantomData<()>,
+    #[cfg(not(feature = "no-llvm"))]
     pub bb_names: &'a HashMap<LLVMBasicBlockRef, Name>,
     /// Map from llvm-sys value to its `Name`
     // We use LLVMValueRef as a *const, even though it's technically a *mut
     #[allow(clippy::mutable_key_type)]
+    #[cfg(not(feature = "no-llvm"))]
     pub val_names: &'a HashMap<LLVMValueRef, Name>,
     /// this counter is used to number parameters, variables, and basic blocks that aren't named
     pub ctr: usize,
 }
 
 impl FunctionDeclaration {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
@@ -343,6 +376,7 @@ impl FunctionDeclaration {
     /// provides the whole `FunctionDeclaration`, and also the value of the
     /// `local_ctr` after parameters are processed (which is needed by
     /// `Function`).
+    #[cfg(not(feature = "no-llvm"))]
     fn from_llvm_ref_internal(func: LLVMValueRef, ctx: &mut ModuleContext) -> (Self, usize) {
         #[cfg(feature = "llvm-14-or-lower")]
         let functy = unsafe { LLVMGetElementType(LLVMTypeOf(func)) }; // for some reason the TypeOf a function is <pointer to function> and not just <function> so we have to deref it like this
@@ -435,6 +469,7 @@ impl FunctionDeclaration {
 }
 
 impl Function {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
@@ -544,6 +579,7 @@ impl Function {
 impl CallingConvention {
     #[allow(clippy::cognitive_complexity)]
     #[rustfmt::skip] // each calling convention on one line, even if lines get a little long
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_u32(u: u32) -> Self {
         use llvm_sys::LLVMCallConv;
         match u {
@@ -600,6 +636,7 @@ pub(crate) struct AttributesData {
 }
 
 impl AttributesData {
+    #[cfg(not(feature = "no-llvm"))]
     pub fn create() -> Self {
         let function_attribute_names = [
             "alignstack",
@@ -657,7 +694,7 @@ impl AttributesData {
             "strictfp",
             "uwtable",
             #[cfg(feature = "llvm-16-or-greater")]
-            "memory"
+            "memory",
         ]
         .iter()
         .map(|&attrname| {
@@ -719,6 +756,7 @@ impl AttributesData {
 }
 
 impl FunctionAttribute {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(a: LLVMAttributeRef, attrsdata: &AttributesData) -> Self {
         if unsafe { LLVMIsEnumAttribute(a) } != 0 {
             let kind = unsafe { LLVMGetEnumAttributeKind(a) };
@@ -795,14 +833,14 @@ impl FunctionAttribute {
                     // See https://github.com/llvm/llvm-project/blob/7cbf1a2591520c2491aa35339f227775f4d3adf6/llvm/include/llvm/Support/ModRef.h#L63
                     // for the breakdown of the encoding logic
 
-                    let encoded_argmem           = (value >> 0) & 0b11;
+                    let encoded_argmem = (value >> 0) & 0b11;
                     let encoded_inaccessible_mem = (value >> 2) & 0b11;
-                    let encoded_default_mem      = (value >> 4) & 0b11;
+                    let encoded_default_mem = (value >> 4) & 0b11;
 
                     Self::Memory {
                         default: MemoryEffect::from_llvm_bits(encoded_default_mem),
                         argmem: MemoryEffect::from_llvm_bits(encoded_argmem),
-                        inaccessible_mem: MemoryEffect::from_llvm_bits(encoded_inaccessible_mem)
+                        inaccessible_mem: MemoryEffect::from_llvm_bits(encoded_inaccessible_mem),
                     }
                 },
                 Some(s) => panic!("Unhandled value from lookup_function_attr: {:?}", s),
@@ -824,6 +862,7 @@ impl FunctionAttribute {
 }
 
 impl ParameterAttribute {
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         a: LLVMAttributeRef,
         attrsdata: &AttributesData,
@@ -901,11 +940,11 @@ impl ParameterAttribute {
         }
     }
 
-    #[cfg(feature = "llvm-11-or-lower")]
+    #[cfg(all(feature = "llvm-11-or-lower", not(feature = "no-llvm")))]
     fn is_type_attr(_a: LLVMAttributeRef) -> bool {
         false
     }
-    #[cfg(feature = "llvm-12-or-greater")]
+    #[cfg(all(feature = "llvm-12-or-lower", not(feature = "no-llvm")))]
     fn is_type_attr(a: LLVMAttributeRef) -> bool {
         unsafe { LLVMIsTypeAttribute(a) != 0 }
     }

@@ -6,9 +6,11 @@
 #![doc(html_root_url = "https://docs.rs/llvm-ir/0.8.2")]
 
 #[macro_use]
+#[cfg(not(feature = "no-llvm"))]
 mod from_llvm;
 mod iterators;
 #[rustfmt::skip]
+#[cfg(not(feature = "no-llvm"))]
 mod llvm_sys;
 
 pub mod basicblock;

@@ -1,36 +1,45 @@
 //! Iterators over various module-level objects
 
+#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use std::iter::Peekable;
 
+#[cfg(not(feature = "no-llvm"))]
 pub fn get_defined_functions(module: LLVMModuleRef) -> impl Iterator<Item = LLVMValueRef> {
     FunctionIterator::new(module).filter(|&f| is_defined(f))
 }
 
+#[cfg(not(feature = "no-llvm"))]
 pub fn get_declared_functions(module: LLVMModuleRef) -> impl Iterator<Item = LLVMValueRef> {
     FunctionIterator::new(module).filter(|&f| !is_defined(f))
 }
 
+#[cfg(not(feature = "no-llvm"))]
 pub fn get_globals(module: LLVMModuleRef) -> impl Iterator<Item = LLVMValueRef> {
     GlobalIterator::new(module)
 }
 
+#[cfg(not(feature = "no-llvm"))]
 pub fn get_global_aliases(module: LLVMModuleRef) -> impl Iterator<Item = LLVMValueRef> {
     GlobalAliasIterator::new(module)
 }
 
+#[cfg(not(feature = "no-llvm"))]
 pub fn get_global_ifuncs(module: LLVMModuleRef) -> impl Iterator<Item = LLVMValueRef> {
     GlobalIFuncIterator::new(module)
 }
 
+#[cfg(not(feature = "no-llvm"))]
 pub fn get_parameters(func: LLVMValueRef) -> impl Iterator<Item = LLVMValueRef> {
     ParamIterator::new(func)
 }
 
+#[cfg(not(feature = "no-llvm"))]
 pub fn get_basic_blocks(func: LLVMValueRef) -> impl Iterator<Item = LLVMBasicBlockRef> {
     BasicBlockIterator::new(func)
 }
 
+#[cfg(not(feature = "no-llvm"))]
 pub fn get_instructions(bb: LLVMBasicBlockRef) -> impl Iterator<Item = LLVMValueRef> {
     InstructionIterator::new(bb)
 }
@@ -65,6 +74,7 @@ macro_rules! iterator {
     };
 }
 
+#[cfg(not(feature = "no-llvm"))]
 iterator!(
     FunctionIterator,
     LLVMModuleRef,
@@ -72,6 +82,7 @@ iterator!(
     LLVMGetFirstFunction,
     LLVMGetNextFunction
 );
+#[cfg(not(feature = "no-llvm"))]
 iterator!(
     GlobalIterator,
     LLVMModuleRef,
@@ -79,6 +90,7 @@ iterator!(
     LLVMGetFirstGlobal,
     LLVMGetNextGlobal
 );
+#[cfg(not(feature = "no-llvm"))]
 iterator!(
     GlobalAliasIterator,
     LLVMModuleRef,
@@ -86,6 +98,7 @@ iterator!(
     LLVMGetFirstGlobalAlias,
     LLVMGetNextGlobalAlias
 );
+#[cfg(not(feature = "no-llvm"))]
 iterator!(
     GlobalIFuncIterator,
     LLVMModuleRef,
@@ -93,6 +106,7 @@ iterator!(
     LLVMGetFirstGlobalIFunc,
     LLVMGetNextGlobalIFunc
 );
+#[cfg(not(feature = "no-llvm"))]
 iterator!(
     ParamIterator,
     LLVMValueRef,
@@ -100,6 +114,7 @@ iterator!(
     LLVMGetFirstParam,
     LLVMGetNextParam
 );
+#[cfg(not(feature = "no-llvm"))]
 iterator!(
     BasicBlockIterator,
     LLVMValueRef,
@@ -107,6 +122,7 @@ iterator!(
     LLVMGetFirstBasicBlock,
     LLVMGetNextBasicBlock
 );
+#[cfg(not(feature = "no-llvm"))]
 iterator!(
     InstructionIterator,
     LLVMBasicBlockRef,
@@ -151,6 +167,7 @@ impl<I: Iterator> Iterator for AllButLastIterator<I> {
 }
 
 /// Is the function actually defined in this module (as opposed to just declared)
+#[cfg(not(feature = "no-llvm"))]
 fn is_defined(func: LLVMValueRef) -> bool {
     unsafe { LLVMIsDeclaration(func) == 0 } // note that we inverted the logic: if it IsDeclaration then we return false
 }

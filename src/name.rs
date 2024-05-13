@@ -28,6 +28,12 @@ impl Name {
     }
 }
 
+impl Default for Name {
+    fn default() -> Self {
+        Name::Number(0)
+    }
+}
+
 impl From<String> for Name {
     fn from(s: String) -> Self {
         Name::Name(Box::new(s))

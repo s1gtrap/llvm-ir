@@ -88,13 +88,16 @@ pub trait HasDebugLoc {
 // from_llvm //
 // ********* //
 
+#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
+#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 
 impl DebugLoc {
     /// `value`: must represent an Instruction, Terminator, GlobalVariable, or Function
     ///
     /// Returns `None` if the object does not have a `DebugLoc`
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_no_col(value: LLVMValueRef) -> Option<Self> {
         match unsafe { get_debugloc_filename(value) } {
             None => None, // if no filename, assume no debugloc. To my knowledge, everything with a debugloc has a filename.
@@ -110,6 +113,7 @@ impl DebugLoc {
     /// `value`: must represent an Instruction or Terminator
     ///
     /// Returns `None` if the object does not have a `DebugLoc`
+    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_with_col(value: LLVMValueRef) -> Option<Self> {
         match Self::from_llvm_no_col(value) {
             Some(mut debugloc) => {

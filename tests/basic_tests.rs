@@ -1,5 +1,7 @@
 use either::Either;
 use itertools::Itertools;
+#[cfg(feature = "llvm-16-or-greater")]
+use llvm_ir::function::MemoryEffect;
 use llvm_ir::function::{FunctionAttribute, ParameterAttribute};
 use llvm_ir::instruction;
 use llvm_ir::module::{Alignment, Endianness, Mangling, PointerLayout};
@@ -7,10 +9,16 @@ use llvm_ir::terminator;
 use llvm_ir::types::{FPType, NamedStructDef, Typed};
 use llvm_ir::HasDebugLoc;
 use llvm_ir::{
-    Constant, ConstantRef, Instruction, IntPredicate, Module, Name, Operand, Terminator, Type,
+    Constant,
+    ConstantRef,
+    Instruction,
+    IntPredicate,
+    Module,
+    Name,
+    Operand,
+    Terminator,
+    Type,
 };
-#[cfg(feature = "llvm-16-or-greater")]
-use llvm_ir::function::MemoryEffect;
 use std::convert::TryInto;
 use std::path::{Path, PathBuf};
 
@@ -146,7 +154,11 @@ fn hellobcg() {
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
 
     let bb = &func.basic_blocks[0];
     let ret: &terminator::Ret = &bb
@@ -161,7 +173,11 @@ fn hellobcg() {
     assert_eq!(debugloc.line, 4);
     assert_eq!(debugloc.col, Some(3));
     assert_eq!(debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
     assert_eq!(&ret.to_string(), "ret i32 0 (with debugloc)");
 }
 
@@ -1573,7 +1589,11 @@ fn variablesbcg() {
     assert_eq!(debugloc.line, 5);
     assert_eq!(debugloc.col, None); // only `Instruction`s and `Terminator`s get column numbers
     assert_eq!(debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
 }
 
 /// this test checks for regression on issue #4
@@ -1685,6 +1705,7 @@ fn issue4() {
 /// This test checks for regression on issue 42
 #[cfg(feature = "llvm-14-or-greater")]
 #[test]
+#[cfg(not(feature = "no-llvm"))]
 fn issue42() {
     init_logging();
     let path = Path::new(BC_DIR).join("issue-42.ll");
@@ -1693,19 +1714,28 @@ fn issue42() {
 }
 
 /// This test checks for regression on issue 57
-#[cfg(feature = "llvm-16-or-greater")] // although the issue probably affects all of our supported versions (IFunc has existed since at least LLVM 8), the provided bitcode was produced with LLVM 16
+#[cfg(feature = "llvm-16-or-greater")]
+// although the issue probably affects all of our supported versions (IFunc has existed since at least LLVM 8), the provided bitcode was produced with LLVM 16
 #[test]
+#[cfg(not(feature = "no-llvm"))]
 fn issue57() {
     init_logging();
     let path = Path::new(BC_DIR).join("ifunc_minimal.ll");
     let module = Module::from_ir_path(&path).expect("Failed to parse module");
-    let ifunc = module.get_global_ifunc_by_name(&Name::from("__libc_strstr")).expect("failed to find global ifunc");
+    let ifunc = module
+        .get_global_ifunc_by_name(&Name::from("__libc_strstr"))
+        .expect("failed to find global ifunc");
     assert_eq!(ifunc.ty, module.types.pointer());
     match ifunc.resolver_fn.as_ref() {
         Constant::GlobalReference { name, ty } => {
             assert_eq!(name, &Name::from("__libc_strstr_ifunc"));
-            assert_eq!(ty, &module.types.func_type(module.types.pointer(), vec![], false));
-        }
+            assert_eq!(
+                ty,
+                &module
+                    .types
+                    .func_type(module.types.pointer(), vec![], false)
+            );
+        },
         _ => panic!("expected a GlobalReference"),
     }
 
@@ -1871,14 +1901,18 @@ fn rustbcg() {
     assert_eq!(debugloc.line, 3);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
 
     let startbb = func
         .get_bb_by_name(&Name::from("start"))
         .expect("Failed to find bb 'start'");
 
     // the first 17 instructions in the function should not have debuglocs - they are just setting up the stack frame
-    for i in 0..17 {
+    for i in 0 .. 17 {
         assert!(startbb.instrs[i].get_debug_loc().is_none());
     }
 
@@ -1889,7 +1923,11 @@ fn rustbcg() {
     assert_eq!(store_debugloc.line, 4);
     assert_eq!(store_debugloc.col, Some(18));
     assert_eq!(store_debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "store i64 0, i64* %sum, align 8 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
@@ -1902,7 +1940,11 @@ fn rustbcg() {
     assert_eq!(call_debugloc.line, 5);
     assert_eq!(call_debugloc.col, Some(13));
     assert_eq!(call_debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt = "%4 = call @_ZN68_$LT$alloc..vec..Vec$LT$T$GT$$u20$as$u20$core..ops..deref..Deref$GT$5deref17h378128d7d9378466E(%alloc::vec::Vec<isize>* %3) (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
@@ -2058,10 +2100,14 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, None);
     assert_eq!(debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
 
     // the first seven instructions shouldn't have debuglocs - they are just setting up the stack frame
-    for i in 0..7 {
+    for i in 0 .. 7 {
         assert!(func.basic_blocks[0].instrs[i].get_debug_loc().is_none());
     }
 
@@ -2073,7 +2119,11 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.line, 8);
     assert_eq!(debugloc.col, Some(28));
     assert_eq!(debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
     assert_eq!(
         &func.basic_blocks[0].instrs[7].to_string(),
         "call @llvm.dbg.declare(<metadata>, <metadata>, <metadata>) (with debugloc)",
@@ -2087,7 +2137,11 @@ fn simple_linked_list_g() {
     assert_eq!(debugloc.line, 9);
     assert_eq!(debugloc.col, Some(34));
     assert_eq!(debugloc.filename, debug_filename);
-    assert!(debugloc.directory.as_ref().expect("directory should exist").ends_with(debug_directory_suffix));
+    assert!(debugloc
+        .directory
+        .as_ref()
+        .expect("directory should exist")
+        .ends_with(debug_directory_suffix));
     #[cfg(feature = "llvm-14-or-lower")]
     let expected_fmt =
         "%8 = getelementptr inbounds %struct.SimpleLinkedList* %3, i32 0, i32 0 (with debugloc)";
@@ -2449,14 +2503,14 @@ fn param_and_func_attributes() {
     assert_eq!(f.function_attributes.len(), 1);
 
     // LLVM 16 no longer has the ReadNone attribute
-    #[cfg(feature="llvm-15-or-lower")]
+    #[cfg(feature = "llvm-15-or-lower")]
     assert_eq!(f.function_attributes[0], FunctionAttribute::ReadNone);
 
     let f = module.get_func_by_name("f.readonly").unwrap();
     assert_eq!(f.function_attributes.len(), 1);
 
     // LLVM 16 no longer has the ReadOnly attribute
-    #[cfg(feature="llvm-15-or-lower")]
+    #[cfg(feature = "llvm-15-or-lower")]
     assert_eq!(f.function_attributes[0], FunctionAttribute::ReadOnly);
 
     let f = module.get_func_by_name("f.returns_twice").unwrap();
@@ -2514,7 +2568,7 @@ fn param_and_func_attributes() {
     assert_eq!(f.function_attributes.len(), 1);
 
     // LLVM 16 no longer has InaccessibleMemOnly attribute
-    #[cfg(feature="llvm-15-or-lower")]
+    #[cfg(feature = "llvm-15-or-lower")]
     assert_eq!(
         f.function_attributes[0],
         FunctionAttribute::InaccessibleMemOnly
@@ -2526,7 +2580,7 @@ fn param_and_func_attributes() {
     assert_eq!(f.function_attributes.len(), 1);
 
     // LLVM 16 no longer has InaccessibleMemOrArgMemOnly attribute
-    #[cfg(feature="llvm-15-or-lower")]
+    #[cfg(feature = "llvm-15-or-lower")]
     assert_eq!(
         f.function_attributes[0],
         FunctionAttribute::InaccessibleMemOrArgMemOnly
@@ -2541,75 +2595,108 @@ fn param_and_func_attributes() {
     {
         let f = module.get_func_by_name("f.default_none").unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::None,
-            argmem: MemoryEffect::None,
-            inaccessible_mem: MemoryEffect::None
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::None,
+                argmem: MemoryEffect::None,
+                inaccessible_mem: MemoryEffect::None
+            }
+        );
 
         let f = module.get_func_by_name("f.default_read").unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::Read,
-            argmem: MemoryEffect::Read,
-            inaccessible_mem: MemoryEffect::Read
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::Read,
+                argmem: MemoryEffect::Read,
+                inaccessible_mem: MemoryEffect::Read
+            }
+        );
 
         let f = module.get_func_by_name("f.default_write").unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::Write,
-            argmem: MemoryEffect::Write,
-            inaccessible_mem: MemoryEffect::Write
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::Write,
+                argmem: MemoryEffect::Write,
+                inaccessible_mem: MemoryEffect::Write
+            }
+        );
 
         let f = module.get_func_by_name("f.default_readwrite").unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::ReadWrite,
-            argmem: MemoryEffect::ReadWrite,
-            inaccessible_mem: MemoryEffect::ReadWrite
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::ReadWrite,
+                argmem: MemoryEffect::ReadWrite,
+                inaccessible_mem: MemoryEffect::ReadWrite
+            }
+        );
 
-        let f = module.get_func_by_name("f.default_none_arg_readwrite").unwrap();
+        let f = module
+            .get_func_by_name("f.default_none_arg_readwrite")
+            .unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::None,
-            argmem: MemoryEffect::ReadWrite,
-            inaccessible_mem: MemoryEffect::None
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::None,
+                argmem: MemoryEffect::ReadWrite,
+                inaccessible_mem: MemoryEffect::None
+            }
+        );
 
-        let f = module.get_func_by_name("f.default_readwrite_arg_none").unwrap();
+        let f = module
+            .get_func_by_name("f.default_readwrite_arg_none")
+            .unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::ReadWrite,
-            argmem: MemoryEffect::None,
-            inaccessible_mem: MemoryEffect::ReadWrite
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::ReadWrite,
+                argmem: MemoryEffect::None,
+                inaccessible_mem: MemoryEffect::ReadWrite
+            }
+        );
 
         let f = module.get_func_by_name("f.arg_read").unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::None,
-            argmem: MemoryEffect::Read,
-            inaccessible_mem: MemoryEffect::None
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::None,
+                argmem: MemoryEffect::Read,
+                inaccessible_mem: MemoryEffect::None
+            }
+        );
 
         let f = module.get_func_by_name("f.inaccessiblemem_read").unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::None,
-            argmem: MemoryEffect::None,
-            inaccessible_mem: MemoryEffect::Read
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::None,
+                argmem: MemoryEffect::None,
+                inaccessible_mem: MemoryEffect::Read
+            }
+        );
 
-        let f = module.get_func_by_name("f.default_read_inaccessiblemem_write_arg_none").unwrap();
+        let f = module
+            .get_func_by_name("f.default_read_inaccessiblemem_write_arg_none")
+            .unwrap();
         assert_eq!(f.function_attributes.len(), 1);
-        assert_eq!(f.function_attributes[0], FunctionAttribute::Memory {
-            default: MemoryEffect::Read,
-            argmem: MemoryEffect::None,
-            inaccessible_mem: MemoryEffect::Write
-        });
+        assert_eq!(
+            f.function_attributes[0],
+            FunctionAttribute::Memory {
+                default: MemoryEffect::Read,
+                argmem: MemoryEffect::None,
+                inaccessible_mem: MemoryEffect::Write
+            }
+        );
     }
 }
 

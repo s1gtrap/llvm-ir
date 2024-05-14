@@ -433,7 +433,7 @@ impl Display for Constant {
             Constant::AddrSpaceCast(a) => write!(f, "{}", a),
             Constant::ICmp(i) => write!(f, "{}", i),
             Constant::FCmp(c) => write!(f, "{}", c),
-            #[cfg(feature = "llvm-16-or-lower")]
+            #[cfg(feature="llvm-16-or-lower")]
             Constant::Select(s) => write!(f, "{}", s),
         }
     }
@@ -1265,7 +1265,7 @@ impl Display for FCmp {
     }
 }
 
-#[cfg(feature = "llvm-16-or-lower")]
+#[cfg(feature="llvm-16-or-lower")]
 #[derive(PartialEq, Clone, Debug)]
 pub struct Select {
     pub condition: ConstantRef,
@@ -1273,10 +1273,10 @@ pub struct Select {
     pub false_value: ConstantRef,
 }
 
-#[cfg(feature = "llvm-16-or-lower")]
+#[cfg(feature="llvm-16-or-lower")]
 impl_constexpr!(Select, Select);
 
-#[cfg(feature = "llvm-16-or-lower")]
+#[cfg(feature="llvm-16-or-lower")]
 impl Typed for Select {
     fn get_type(&self, types: &Types) -> TypeRef {
         let t = types.type_of(&self.true_value);
@@ -1285,7 +1285,7 @@ impl Typed for Select {
     }
 }
 
-#[cfg(feature = "llvm-16-or-lower")]
+#[cfg(feature="llvm-16-or-lower")]
 impl Display for Select {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
@@ -1300,13 +1300,11 @@ impl Display for Select {
 // from_llvm //
 // ********* //
 
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 use std::collections::hash_map::Entry;
 
 impl Constant {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(constant: LLVMValueRef, ctx: &mut ModuleContext) -> ConstantRef {
         if let Some(constantref) = ctx.constants.get(&constant) {
             return constantref.clone();
@@ -1318,7 +1316,6 @@ impl Constant {
         }
     }
 
-    #[cfg(not(feature = "no-llvm"))]
     fn parse_from_llvm_ref(constant: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         use llvm_sys::LLVMValueKind;
         if unsafe { LLVMIsAConstant(constant).is_null() } {
@@ -1524,7 +1521,6 @@ impl Constant {
 macro_rules! binop_from_llvm {
     ($expr:ident) => {
         impl $expr {
-            #[cfg(not(feature = "no-llvm"))]
             pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
                 Self {
@@ -1565,7 +1561,6 @@ binop_from_llvm!(FDiv);
 binop_from_llvm!(FRem);
 
 impl ExtractElement {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
@@ -1576,7 +1571,6 @@ impl ExtractElement {
 }
 
 impl InsertElement {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
@@ -1588,7 +1582,7 @@ impl InsertElement {
 }
 
 impl ShuffleVector {
-    #[cfg(all(feature = "llvm-10-or-greater", not(feature = "no-llvm")))]
+    #[cfg(feature = "llvm-10-or-lower")]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {
@@ -1597,7 +1591,7 @@ impl ShuffleVector {
             mask: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 2) }, ctx),
         }
     }
-    #[cfg(all(feature = "llvm-11-or-greater", not(feature = "no-llvm")))]
+    #[cfg(feature = "llvm-11-or-greater")]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, _ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         // We currently (as of LLVM 11) have no way to get the mask of a
@@ -1609,7 +1603,6 @@ impl ShuffleVector {
 
 #[cfg(feature = "llvm-14-or-lower")]
 impl ExtractValue {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
@@ -1640,7 +1633,6 @@ impl InsertValue {
 }
 
 impl GetElementPtr {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         Self {
             address: Constant::from_llvm_ref(unsafe { LLVMGetOperand(expr, 0) }, ctx),
@@ -1660,7 +1652,6 @@ impl GetElementPtr {
 macro_rules! typed_unop_from_llvm {
     ($expr:ident) => {
         impl $expr {
-            #[cfg(not(feature = "no-llvm"))]
             pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
                 assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 1);
                 Self {
@@ -1687,7 +1678,6 @@ typed_unop_from_llvm!(BitCast);
 typed_unop_from_llvm!(AddrSpaceCast);
 
 impl ICmp {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
@@ -1699,7 +1689,6 @@ impl ICmp {
 }
 
 impl FCmp {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 2);
         Self {
@@ -1710,9 +1699,8 @@ impl FCmp {
     }
 }
 
-#[cfg(feature = "llvm-16-or-lower")]
+#[cfg(feature="llvm-16-or-lower")]
 impl Select {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(expr: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(expr) }, 3);
         Self {

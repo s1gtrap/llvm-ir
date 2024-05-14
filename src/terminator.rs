@@ -337,7 +337,7 @@ impl Display for IndirectBr {
                 .get(0)
                 .expect("IndirectBr with no possible dests"),
         )?;
-        for dest in &self.possible_dests[1 ..] {
+        for dest in &self.possible_dests[1..] {
             write!(f, ", label {}", dest)?;
         }
         write!(f, " ]")?;
@@ -555,7 +555,7 @@ impl Display for CatchSwitch {
                 .get(0)
                 .expect("CatchSwitch with no handlers"),
         )?;
-        for handler in &self.catch_handlers[1 ..] {
+        for handler in &self.catch_handlers[1..] {
             write!(f, ", label {}", handler)?;
         }
         write!(
@@ -637,18 +637,14 @@ impl Display for CallBr {
 // from_llvm //
 // ********* //
 
-#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMOpcode;
 
 impl Terminator {
     #[rustfmt::skip] // so we can keep all of the match arms consistent
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -702,7 +698,6 @@ impl Terminator {
 }
 
 impl Ret {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -725,7 +720,6 @@ impl Ret {
 }
 
 impl Br {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(term: LLVMValueRef, func_ctx: &mut FunctionContext) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 1);
         Self {
@@ -741,7 +735,6 @@ impl Br {
 }
 
 impl CondBr {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -767,7 +760,6 @@ impl CondBr {
 }
 
 impl Switch {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -777,7 +769,7 @@ impl Switch {
             operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
             dests: {
                 let num_dests = unsafe { LLVMGetNumSuccessors(term) };
-                let dest_bbs = (1 ..= num_dests) // LLVMGetSuccessor(0) apparently gives the default dest
+                let dest_bbs = (1..=num_dests) // LLVMGetSuccessor(0) apparently gives the default dest
                     .map(|i| {
                         func_ctx
                             .bb_names
@@ -785,7 +777,7 @@ impl Switch {
                             .expect("Failed to find switch destination in map")
                             .clone()
                     });
-                let dest_vals = (1 .. num_dests).map(|i| {
+                let dest_vals = (1..num_dests).map(|i| {
                     Constant::from_llvm_ref(unsafe { LLVMGetOperand(term, 2 * i) }, ctx)
                     // 2*i because empirically, operand 1 is the default dest, and operands 3/5/7/etc are the successor blocks
                 });
@@ -803,7 +795,6 @@ impl Switch {
 }
 
 impl IndirectBr {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -813,7 +804,7 @@ impl IndirectBr {
             operand: Operand::from_llvm_ref(unsafe { LLVMGetOperand(term, 0) }, ctx, func_ctx),
             possible_dests: {
                 let num_dests = unsafe { LLVMGetNumSuccessors(term) };
-                (0 .. num_dests)
+                (0..num_dests)
                     .map(|i| {
                         func_ctx
                             .bb_names
@@ -830,7 +821,6 @@ impl IndirectBr {
 }
 
 impl Invoke {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -864,7 +854,6 @@ impl Invoke {
 }
 
 impl Resume {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -880,7 +869,6 @@ impl Resume {
 }
 
 impl Unreachable {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(term: LLVMValueRef) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(term) }, 0);
         Self {
@@ -891,7 +879,6 @@ impl Unreachable {
 }
 
 impl CleanupRet {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -927,7 +914,6 @@ impl CleanupRet {
 }
 
 impl CatchRet {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -947,7 +933,6 @@ impl CatchRet {
 }
 
 impl CatchSwitch {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -993,7 +978,6 @@ impl CatchSwitch {
 }
 
 impl CallBr {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         term: LLVMValueRef,
         ctx: &mut ModuleContext,

@@ -61,14 +61,11 @@ impl Display for Operand {
 
 use crate::constant::Constant;
 use crate::function::FunctionContext;
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMValueKind;
 
 impl Operand {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         operand: LLVMValueRef,
         ctx: &mut ModuleContext,

@@ -1,7 +1,6 @@
 use crate::constant::ConstantRef;
 use crate::debugloc::*;
 use crate::function::{Function, FunctionAttribute, FunctionDeclaration, GroupID};
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::name::Name;
 use crate::types::{FPType, Type, TypeRef, Typed, Types, TypesBuilder};
@@ -10,47 +9,35 @@ use std::path::Path;
 
 /// See [LLVM 14 docs on Module Structure](https://releases.llvm.org/14.0.0/docs/LangRef.html#module-structure)
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "json", derive(serde::Deserialize))]
 pub struct Module {
     /// The name of the module
-    #[serde(rename = "Name")]
     pub name: String,
     /// See [LLVM 14 docs on Source Filename](https://releases.llvm.org/14.0.0/docs/LangRef.html#source-filename)
-    #[serde(skip)]
     pub source_file_name: String,
     /// See [LLVM 14 docs on Data Layout](https://releases.llvm.org/14.0.0/docs/LangRef.html#data-layout)
-    #[serde(skip)]
     pub data_layout: DataLayout,
     /// See [LLVM 14 docs on Target Triple](https://releases.llvm.org/14.0.0/docs/LangRef.html#target-triple)
-    #[serde(skip)]
     pub target_triple: Option<String>,
     /// Functions which are defined (not just declared) in this `Module`.
     /// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
-    #[serde(rename = "FunctionList")]
     pub functions: Vec<Function>,
     /// Functions which are declared (but not defined) in this `Module`.
     /// See [LLVM 14 docs on Functions](https://releases.llvm.org/14.0.0/docs/LangRef.html#functions)
-    #[serde(skip)]
     pub func_declarations: Vec<FunctionDeclaration>,
     /// See [LLVM 14 docs on Global Variables](https://releases.llvm.org/14.0.0/docs/LangRef.html#global-variables)
-    #[serde(skip)]
     pub global_vars: Vec<GlobalVariable>,
     /// See [LLVM 14 docs on Global Aliases](https://releases.llvm.org/14.0.0/docs/LangRef.html#aliases)
-    #[serde(skip)]
     pub global_aliases: Vec<GlobalAlias>,
     /// See [LLVM 14 docs on Global IFuncs](https://releases.llvm.org/14.0.0/docs/LangRef.html#ifuncs)
-    #[serde(skip)]
     pub global_ifuncs: Vec<GlobalIFunc>,
     // --TODO not yet implemented-- pub function_attribute_groups: Vec<FunctionAttributeGroup>,
     /// See [LLVM 14 docs on Module-Level Inline Assembly](https://releases.llvm.org/14.0.0/docs/LangRef.html#moduleasm)
-    #[serde(skip)]
     pub inline_assembly: String,
     // --TODO not yet implemented-- pub metadata_nodes: Vec<(MetadataNodeID, MetadataNode)>,
     // --TODO not yet implemented-- pub named_metadatas: Vec<NamedMetadata>,
     // --TODO not yet implemented-- pub comdats: Vec<Comdat>,
     /// Holds a reference to all of the `Type`s used in the `Module`, and
     /// facilitates lookups so you can get a `TypeRef` to the `Type` you want.
-    #[serde(skip)]
     pub types: Types,
 }
 
@@ -97,13 +84,7 @@ impl Module {
             .find(|global| global.name == *name)
     }
 
-    #[cfg(feature = "no-llvm")]
-    pub fn from_bc_path(path: impl AsRef<Path>) -> Result<Self, String> {
-        todo!()
-    }
-
     /// Parse the LLVM bitcode (.bc) file at the given path to create a `Module`
-    #[cfg(not(feature = "no-llvm"))]
     pub fn from_bc_path(path: impl AsRef<Path>) -> Result<Self, String> {
         unsafe fn parse_bc(
             context_ref: LLVMContextRef,
@@ -122,11 +103,6 @@ impl Module {
     }
 
     /// Parse the LLVM text IR (.ll) file at the given path to create a `Module`
-    #[cfg(feature = "no-llvm")]
-    pub fn from_ir(data: &str) -> Result<Self, String> {
-        todo!()
-    }
-    #[cfg(not(feature = "no-llvm"))]
     pub fn from_ir(data: &str) -> Result<Self, String> {
         unsafe fn parse_ir(
             context_ref: LLVMContextRef,
@@ -180,7 +156,6 @@ impl Module {
     }
 
     /// Parse the LLVM text IR (.ll) file at the given path to create a `Module`
-    #[cfg(not(feature = "no-llvm"))]
     pub fn from_ir_path(path: impl AsRef<Path>) -> Result<Self, String> {
         unsafe fn parse_ir(
             context_ref: LLVMContextRef,
@@ -207,7 +182,6 @@ impl Module {
         }
         Self::from_path(path, parse_ir)
     }
-    #[cfg(not(feature = "no-llvm"))]
     fn from_path(
         path: impl AsRef<Path>,
         parse: unsafe fn(
@@ -317,25 +291,6 @@ fn test_module_from_ir() {
     // TODO: test remaining fields
 }
 
-/*#[cfg(feature = "serde")]
-struct FunctionVisitor;
-
-#[cfg(feature = "serde")]
-impl<'de> serde::de::Visitor<'de> for FunctionVisitor {
-    type Value = crate::Function;
-
-    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.write_str("foo")
-    }
-
-    fn visit_seq<A>(self, mut seq: A) -> std::result::Result<Self::Value, A::Error>
-    where
-        A: serde::de::SeqAccess<'de>,
-    {
-        todo!("{:?}", seq.next_element::<crate::Function>())
-    }
-}
-
 #[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for Module {
     fn deserialize<D>(deserializer: D) -> Result<Module, D::Error>
@@ -357,7 +312,7 @@ impl<'de> serde::Deserialize<'de> for Module {
             source_file_name,
             data_layout: DataLayout::default(), // TODO: impl
             target_triple,
-            functions: vec![D::deserialize_seq(deserializer, FunctionVisitor)?],
+            functions: vec![],              // TODO: impl
             func_declarations: vec![],      // TODO: impl
             global_vars: vec![],            // TODO: impl
             global_aliases: vec![],         // TODO: impl
@@ -366,7 +321,7 @@ impl<'de> serde::Deserialize<'de> for Module {
             types: Types::default(),        // TODO: impl
         })
     }
-}*/
+}
 
 #[test]
 #[cfg(feature = "serde")]
@@ -815,18 +770,11 @@ pub enum Mangling {
 // ********* //
 
 use crate::constant::Constant;
-#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
 use crate::function::AttributesData;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::comdat::*;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::{
-    LLVMDLLStorageClass,
-    LLVMLinkage,
-    LLVMThreadLocalMode,
-    LLVMUnnamedAddr,
-    LLVMVisibility,
+    LLVMDLLStorageClass, LLVMLinkage, LLVMThreadLocalMode, LLVMUnnamedAddr, LLVMVisibility,
 };
 
 /// This struct contains data used when translating llvm-sys objects into our
@@ -834,24 +782,19 @@ use llvm_sys::{
 pub(crate) struct ModuleContext<'a> {
     pub types: TypesBuilder,
     pub attrsdata: AttributesData,
-    #[cfg(feature = "no-llvm")]
-    pub shadow: &'a std::marker::PhantomData<()>,
     /// Map from an llvm-sys constant to the corresponding llvm-ir `ConstantRef`
     // We use LLVMValueRef as a *const, even though it's technically a *mut
     #[allow(clippy::mutable_key_type)]
-    #[cfg(not(feature = "no-llvm"))]
     pub constants: HashMap<LLVMValueRef, ConstantRef>,
     /// Map from an llvm-sys global to its `Name`
     // We use LLVMValueRef as a *const, even though it's technically a *mut
     #[allow(clippy::mutable_key_type)]
-    #[cfg(not(feature = "no-llvm"))]
     pub global_names: &'a HashMap<LLVMValueRef, Name>,
 }
 
 impl<'a> ModuleContext<'a> {
     // We use LLVMValueRef as a *const, even though it's technically a *mut
     #[allow(clippy::mutable_key_type)]
-    #[cfg(not(feature = "no-llvm"))]
     fn new(global_names: &'a HashMap<LLVMValueRef, Name>) -> Self {
         Self {
             types: TypesBuilder::new(),
@@ -863,7 +806,6 @@ impl<'a> ModuleContext<'a> {
 }
 
 impl Module {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(module: LLVMModuleRef) -> Self {
         debug!("Creating a Module from an LLVMModuleRef");
         let mut global_ctr = 0; // this ctr is used to number global objects that aren't named
@@ -924,7 +866,6 @@ impl Module {
 }
 
 impl GlobalVariable {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         global: LLVMValueRef,
         ctr: &mut usize,
@@ -975,7 +916,6 @@ impl GlobalVariable {
 }
 
 impl GlobalAlias {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         alias: LLVMValueRef,
         ctr: &mut usize,
@@ -1001,7 +941,6 @@ impl GlobalAlias {
 }
 
 impl GlobalIFunc {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         ifunc: LLVMValueRef,
         ctr: &mut usize,
@@ -1026,7 +965,6 @@ impl NamedMetadata {
 */
 
 impl UnnamedAddr {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(ua: LLVMUnnamedAddr) -> Option<Self> {
         use LLVMUnnamedAddr::*;
         match ua {
@@ -1038,7 +976,6 @@ impl UnnamedAddr {
 }
 
 impl Linkage {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(linkage: LLVMLinkage) -> Self {
         use LLVMLinkage::*;
         match linkage {
@@ -1064,7 +1001,6 @@ impl Linkage {
 }
 
 impl Visibility {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(visibility: LLVMVisibility) -> Self {
         use LLVMVisibility::*;
         match visibility {
@@ -1076,7 +1012,6 @@ impl Visibility {
 }
 
 impl DLLStorageClass {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(dllsc: LLVMDLLStorageClass) -> Self {
         use LLVMDLLStorageClass::*;
         match dllsc {
@@ -1088,7 +1023,6 @@ impl DLLStorageClass {
 }
 
 impl ThreadLocalMode {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(tlm: LLVMThreadLocalMode) -> Self {
         use LLVMThreadLocalMode::*;
         match tlm {
@@ -1102,7 +1036,6 @@ impl ThreadLocalMode {
 }
 
 impl Comdat {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(comdat: LLVMComdatRef) -> Self {
         Self {
             name: "error: not yet implemented: Comdat.name".to_owned(), // there appears to not be a getter for this in the LLVM C API?  I could be misunderstanding something
@@ -1112,7 +1045,6 @@ impl Comdat {
 }
 
 impl SelectionKind {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(sk: LLVMComdatSelectionKind) -> Self {
         use LLVMComdatSelectionKind::*;
         match sk {
@@ -1142,7 +1074,6 @@ impl Default for DataLayout {
 }
 
 impl DataLayout {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_module_ref(module: LLVMModuleRef) -> Self {
         let layout_str = unsafe { get_data_layout_str(module) };
         let mut data_layout = DataLayout {
@@ -1169,7 +1100,7 @@ impl DataLayout {
                 let addr_space: AddrSpace = if first_chunk == "p" {
                     0
                 } else {
-                    first_chunk[1 ..]
+                    first_chunk[1..]
                         .parse()
                         .expect("datalayout 'p': Failed to parse address space")
                 };
@@ -1211,7 +1142,7 @@ impl DataLayout {
             } else if spec.starts_with('i') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
-                let size: u32 = first_chunk[1 ..]
+                let size: u32 = first_chunk[1..]
                     .parse()
                     .expect("datalayout 'i': Failed to parse size");
                 let second_chunk = chunks
@@ -1235,7 +1166,7 @@ impl DataLayout {
             } else if spec.starts_with('v') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
-                let size: u32 = first_chunk[1 ..]
+                let size: u32 = first_chunk[1..]
                     .parse()
                     .expect("datalayout 'v': Failed to parse size");
                 let second_chunk = chunks
@@ -1259,7 +1190,7 @@ impl DataLayout {
             } else if spec.starts_with('f') {
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
-                let size: u32 = first_chunk[1 ..]
+                let size: u32 = first_chunk[1..]
                     .parse()
                     .expect("datalayout 'f': Failed to parse size");
                 let second_chunk = chunks
@@ -1353,7 +1284,7 @@ impl DataLayout {
                     .get_or_insert_with(HashSet::new);
                 let mut chunks = spec.split(':');
                 let first_chunk = chunks.next().unwrap();
-                let size = first_chunk[1 ..]
+                let size = first_chunk[1..]
                     .parse()
                     .expect("datalayout 'n': Failed to parse first size");
                 native_int_widths.insert(size);

@@ -7,42 +7,42 @@ use crate::{BasicBlock, ConstantRef, Name};
 #[derive(PartialEq, Clone, Debug)]
 #[cfg_attr(feature = "json", derive(serde::Deserialize))]
 pub struct Function {
-    #[serde(rename = "GlobalIdentifier")]
+    #[cfg_attr(feature = "json", serde(rename = "GlobalIdentifier"))]
     pub name: String,
-    #[serde(rename = "Params")]
+    #[cfg_attr(feature = "json", serde(rename = "Params"))]
     pub parameters: Vec<Parameter>,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub is_var_arg: bool,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub return_type: TypeRef,
-    #[serde(rename = "BasicBlock")]
+    #[cfg_attr(feature = "json", serde(rename = "BasicBlock"))]
     pub basic_blocks: Vec<BasicBlock>,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub function_attributes: Vec<FunctionAttribute>, // llvm-hs-pure has Vec<Either<GroupID, FunctionAttribute>>, but I'm not sure how the GroupID ones come about
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub return_attributes: Vec<ParameterAttribute>,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub linkage: Linkage,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub visibility: Visibility,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub dll_storage_class: DLLStorageClass, // llvm-hs-pure has Option<DLLStorageClass>, but the llvm_sys api doesn't look like it can fail
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub calling_convention: CallingConvention,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub section: Option<String>,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub comdat: Option<Comdat>, // llvm-hs-pure has Option<String>, I'm not sure why
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub alignment: u32,
     /// See [LLVM 14 docs on Garbage Collector Strategy Names](https://releases.llvm.org/14.0.0/docs/LangRef.html#gc)
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub garbage_collector_name: Option<String>,
     // pub prefix: Option<ConstantRef>,  // appears to not be exposed in the LLVM C API, only the C++ API
     /// Personalities are used for exception handling. See [LLVM 14 docs on Personality Function](https://releases.llvm.org/14.0.0/docs/LangRef.html#personalityfn)
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub personality_function: Option<ConstantRef>,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: Vec<(String, MetadataRef<MetadataNode>)>,
 }
@@ -114,11 +114,11 @@ pub struct FunctionDeclaration {
 #[derive(PartialEq, Clone, Debug)]
 #[cfg_attr(feature = "json", derive(serde::Deserialize))]
 pub struct Parameter {
-    #[serde(rename = "Name")]
+    #[cfg_attr(feature = "json", serde(rename = "Name"))]
     pub name: Name,
-    #[serde(rename = "Type")]
+    #[cfg_attr(feature = "json", serde(rename = "Type"))]
     pub ty: TypeRef,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub attributes: Vec<ParameterAttribute>,
 }
 
@@ -332,16 +332,12 @@ pub type GroupID = usize;
 // ********* //
 
 use crate::constant::Constant;
-#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 #[cfg(feature = "llvm-12-or-greater")]
 use crate::types::TypesBuilder;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::comdat::*;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::{LLVMAttributeFunctionIndex, LLVMAttributeReturnIndex};
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -352,21 +348,16 @@ pub(crate) struct FunctionContext<'a> {
     /// Map from llvm-sys basic block to its `Name`
     // We use LLVMBasicBlockRef as a *const, even though it's technically a *mut
     #[allow(clippy::mutable_key_type)]
-    #[cfg(feature = "no-llvm")]
-    phantom: &'a std::marker::PhantomData<()>,
-    #[cfg(not(feature = "no-llvm"))]
     pub bb_names: &'a HashMap<LLVMBasicBlockRef, Name>,
     /// Map from llvm-sys value to its `Name`
     // We use LLVMValueRef as a *const, even though it's technically a *mut
     #[allow(clippy::mutable_key_type)]
-    #[cfg(not(feature = "no-llvm"))]
     pub val_names: &'a HashMap<LLVMValueRef, Name>,
     /// this counter is used to number parameters, variables, and basic blocks that aren't named
     pub ctr: usize,
 }
 
 impl FunctionDeclaration {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
@@ -380,7 +371,6 @@ impl FunctionDeclaration {
     /// provides the whole `FunctionDeclaration`, and also the value of the
     /// `local_ctr` after parameters are processed (which is needed by
     /// `Function`).
-    #[cfg(not(feature = "no-llvm"))]
     fn from_llvm_ref_internal(func: LLVMValueRef, ctx: &mut ModuleContext) -> (Self, usize) {
         #[cfg(feature = "llvm-14-or-lower")]
         let functy = unsafe { LLVMGetElementType(LLVMTypeOf(func)) }; // for some reason the TypeOf a function is <pointer to function> and not just <function> so we have to deref it like this
@@ -473,7 +463,6 @@ impl FunctionDeclaration {
 }
 
 impl Function {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(func: LLVMValueRef, ctx: &mut ModuleContext) -> Self {
         let func = unsafe { LLVMIsAFunction(func) };
         assert!(!func.is_null());
@@ -583,7 +572,6 @@ impl Function {
 impl CallingConvention {
     #[allow(clippy::cognitive_complexity)]
     #[rustfmt::skip] // each calling convention on one line, even if lines get a little long
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_u32(u: u32) -> Self {
         use llvm_sys::LLVMCallConv;
         match u {
@@ -640,7 +628,6 @@ pub(crate) struct AttributesData {
 }
 
 impl AttributesData {
-    #[cfg(not(feature = "no-llvm"))]
     pub fn create() -> Self {
         let function_attribute_names = [
             "alignstack",
@@ -760,7 +747,6 @@ impl AttributesData {
 }
 
 impl FunctionAttribute {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(a: LLVMAttributeRef, attrsdata: &AttributesData) -> Self {
         if unsafe { LLVMIsEnumAttribute(a) } != 0 {
             let kind = unsafe { LLVMGetEnumAttributeKind(a) };
@@ -866,7 +852,6 @@ impl FunctionAttribute {
 }
 
 impl ParameterAttribute {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         a: LLVMAttributeRef,
         attrsdata: &AttributesData,
@@ -944,11 +929,11 @@ impl ParameterAttribute {
         }
     }
 
-    #[cfg(all(feature = "llvm-11-or-lower", not(feature = "no-llvm")))]
+    #[cfg(feature = "llvm-11-or-lower")]
     fn is_type_attr(_a: LLVMAttributeRef) -> bool {
         false
     }
-    #[cfg(all(feature = "llvm-12-or-lower", not(feature = "no-llvm")))]
+    #[cfg(feature = "llvm-12-or-greater")]
     fn is_type_attr(a: LLVMAttributeRef) -> bool {
         unsafe { LLVMIsTypeAttribute(a) != 0 }
     }

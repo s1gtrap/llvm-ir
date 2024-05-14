@@ -4,7 +4,7 @@ use std::fmt;
 /// sequential numbering (e.g. `%3`).
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Hash)]
 #[cfg_attr(feature = "json", derive(serde::Deserialize))]
-#[serde(untagged)]
+#[cfg_attr(feature = "json", serde(untagged))]
 pub enum Name {
     /// has a string name
     // with `Box`, the enum `Name` has size 16 bytes, vs with a `String`
@@ -27,12 +27,6 @@ impl Name {
         } else {
             Name::Name(Box::new(s))
         }
-    }
-}
-
-impl Default for Name {
-    fn default() -> Self {
-        Name::Number(0)
     }
 }
 

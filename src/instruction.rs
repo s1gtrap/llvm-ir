@@ -661,7 +661,12 @@ macro_rules! binop_nuw_nsw_display {
                 write!(
                     f,
                     "{} = {}{}{} {}, {}",
-                    &self.dest, $dispname, nuw, nsw, &self.operand0, &self.operand1,
+                    &self.dest,
+                    $dispname,
+                    nuw,
+                    nsw,
+                    &self.operand0,
+                    &self.operand1,
                 )?;
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
@@ -684,7 +689,11 @@ macro_rules! binop_exact_display {
                 write!(
                     f,
                     "{} = {}{} {}, {}",
-                    &self.dest, $dispname, exact, &self.operand0, &self.operand1,
+                    &self.dest,
+                    $dispname,
+                    exact,
+                    &self.operand0,
+                    &self.operand1,
                 )?;
                 if self.debugloc.is_some() {
                     write!(f, " (with debugloc)")?;
@@ -793,9 +802,9 @@ pub struct Add {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nuw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nsw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -813,9 +822,9 @@ pub struct Sub {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nuw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nsw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -833,9 +842,9 @@ pub struct Mul {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nuw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nsw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -853,7 +862,7 @@ pub struct UDiv {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub exact: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -871,7 +880,7 @@ pub struct SDiv {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub exact: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -969,9 +978,9 @@ pub struct Shl {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nuw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nuw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     #[cfg(feature = "llvm-17-or-greater")]
-    pub nsw: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub nsw: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -989,7 +998,7 @@ pub struct LShr {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub exact: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1007,7 +1016,7 @@ pub struct AShr {
     pub operand1: Operand,
     pub dest: Name,
     #[cfg(feature = "llvm-17-or-greater")]
-    pub exact: bool, // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
+    pub exact: bool,  // prior to LLVM 17, no getter for this was exposed in the LLVM C API, only in the C++ one
     pub debugloc: Option<DebugLoc>,
     // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
@@ -1638,7 +1647,8 @@ pub struct GetElementPtr {
     pub in_bounds: bool,
     pub debugloc: Option<DebugLoc>,
     #[cfg(feature = "llvm-14-or-greater")]
-    pub source_element_type: TypeRef, // --TODO not yet implemented-- pub metadata: InstructionMetadata,
+    pub source_element_type: TypeRef
+    // --TODO not yet implemented-- pub metadata: InstructionMetadata,
 }
 
 impl_inst!(GetElementPtr, GetElementPtr);
@@ -2488,27 +2498,20 @@ pub struct LandingPadClause {}
 // ********* //
 
 use crate::constant::Constant;
-#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
 use crate::types::TypesBuilder;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMAtomicOrdering;
 #[cfg(feature = "llvm-10-or-greater")]
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMAtomicRMWBinOp;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMOpcode;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
 #[cfg(feature = "llvm-11-or-greater")]
 use std::convert::TryInto;
 
 impl Instruction {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2630,7 +2633,6 @@ impl Instruction {
 macro_rules! unop_from_llvm {
     ($inst:ident) => {
         impl $inst {
-            #[cfg(not(feature = "no-llvm"))]
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
                 ctx: &mut ModuleContext,
@@ -2655,7 +2657,6 @@ macro_rules! unop_from_llvm {
 macro_rules! binop_from_llvm {
     ($inst:ident) => {
         impl $inst {
-            #[cfg(not(feature = "no-llvm"))]
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
                 ctx: &mut ModuleContext,
@@ -2685,7 +2686,6 @@ macro_rules! binop_from_llvm {
 macro_rules! binop_from_llvm_with_nuw_nsw {
     ($inst:ident) => {
         impl $inst {
-            #[cfg(not(feature = "no-llvm"))]
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
                 ctx: &mut ModuleContext,
@@ -2719,7 +2719,6 @@ macro_rules! binop_from_llvm_with_nuw_nsw {
 macro_rules! binop_from_llvm_with_exact {
     ($inst:ident) => {
         impl $inst {
-            #[cfg(not(feature = "no-llvm"))]
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
                 ctx: &mut ModuleContext,
@@ -2771,7 +2770,6 @@ unop_from_llvm!(FNeg);
 unop_from_llvm!(Freeze);
 
 impl ExtractElement {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2789,7 +2787,6 @@ impl ExtractElement {
 }
 
 impl InsertElement {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2808,7 +2805,6 @@ impl InsertElement {
 }
 
 impl ShuffleVector {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2859,7 +2855,6 @@ impl ShuffleVector {
 }
 
 impl ExtractValue {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2881,7 +2876,6 @@ impl ExtractValue {
 }
 
 impl InsertValue {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2904,7 +2898,6 @@ impl InsertValue {
 }
 
 impl Alloca {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2929,7 +2922,6 @@ impl Alloca {
 }
 
 impl Load {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2961,7 +2953,6 @@ impl Load {
 }
 
 impl Store {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -2991,7 +2982,6 @@ impl Store {
 }
 
 impl Fence {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(inst: LLVMValueRef) -> Self {
         assert_eq!(unsafe { LLVMGetNumOperands(inst) }, 0);
         Self {
@@ -3006,7 +2996,6 @@ impl Fence {
 }
 
 impl CmpXchg {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3037,7 +3026,6 @@ impl CmpXchg {
 }
 
 impl AtomicRMW {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3063,7 +3051,6 @@ impl AtomicRMW {
 }
 
 impl GetElementPtr {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3083,9 +3070,7 @@ impl GetElementPtr {
             in_bounds: unsafe { LLVMIsInBounds(inst) } != 0,
             debugloc: DebugLoc::from_llvm_with_col(inst),
             #[cfg(feature = "llvm-14-or-greater")]
-            source_element_type: ctx
-                .types
-                .type_from_llvm_ref(unsafe { LLVMGetGEPSourceElementType(inst) }),
+            source_element_type: ctx.types.type_from_llvm_ref(unsafe { LLVMGetGEPSourceElementType(inst) }),
             // metadata: InstructionMetadata::from_llvm_inst(inst),
         }
     }
@@ -3096,7 +3081,6 @@ impl GetElementPtr {
 macro_rules! typed_unop_from_llvm {
     ($inst:ident) => {
         impl $inst {
-            #[cfg(not(feature = "no-llvm"))]
             pub(crate) fn from_llvm_ref(
                 inst: LLVMValueRef,
                 ctx: &mut ModuleContext,
@@ -3134,7 +3118,6 @@ typed_unop_from_llvm!(BitCast);
 typed_unop_from_llvm!(AddrSpaceCast);
 
 impl ICmp {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3153,7 +3136,6 @@ impl ICmp {
 }
 
 impl FCmp {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3172,7 +3154,6 @@ impl FCmp {
 }
 
 impl Phi {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3206,7 +3187,6 @@ impl Phi {
 }
 
 impl Select {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3237,7 +3217,6 @@ pub(crate) struct CallInfo {
 
 impl CallInfo {
     // Call this function only an a Call instruction or Invoke terminator
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3333,7 +3312,6 @@ impl CallInfo {
 }
 
 impl Call {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3367,7 +3345,6 @@ impl Call {
 }
 
 impl VAArg {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3385,7 +3362,6 @@ impl VAArg {
 }
 
 impl LandingPad {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3408,7 +3384,6 @@ impl LandingPad {
 }
 
 impl CatchPad {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3436,7 +3411,6 @@ impl CatchPad {
 }
 
 impl CleanupPad {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         inst: LLVMValueRef,
         ctx: &mut ModuleContext,
@@ -3460,7 +3434,6 @@ impl CleanupPad {
 }
 
 impl SynchronizationScope {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(inst: LLVMValueRef) -> Self {
         if unsafe { LLVMIsAtomicSingleThread(inst) } != 0 {
             SynchronizationScope::SingleThread
@@ -3472,7 +3445,6 @@ impl SynchronizationScope {
 
 impl MemoryOrdering {
     #[rustfmt::skip] // each one on one line, even if lines get a little long
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(ao: LLVMAtomicOrdering) -> Self {
         match ao {
             LLVMAtomicOrdering::LLVMAtomicOrderingUnordered => MemoryOrdering::Unordered,
@@ -3488,7 +3460,6 @@ impl MemoryOrdering {
 
 #[cfg(feature = "llvm-10-or-greater")]
 impl RMWBinOp {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(rmwbo: LLVMAtomicRMWBinOp) -> Self {
         match rmwbo {
             LLVMAtomicRMWBinOp::LLVMAtomicRMWBinOpXchg => Self::Xchg,
@@ -3515,7 +3486,6 @@ impl RMWBinOp {
 }
 
 impl InlineAssembly {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(asm: LLVMValueRef, types: &mut TypesBuilder) -> Self {
         // The LLVM C API appears to have no way to get any information about an
         // `InlineAssembly`? You can tell whether an `LLVMValueRef` is an
@@ -3528,7 +3498,6 @@ impl InlineAssembly {
 }
 
 impl LandingPadClause {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(_lpc: LLVMValueRef) -> Self {
         // The LLVM C API has an enum `LLVMLandingPadClauseTy`, but appears not
         // to reference it. In particular, it's unclear how to tell whether a

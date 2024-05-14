@@ -78,15 +78,11 @@ impl Display for FPPredicate {
 // from_llvm //
 // ********* //
 
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMIntPredicate;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMRealPredicate;
 
 impl IntPredicate {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(pred: LLVMIntPredicate) -> Self {
         match pred {
             LLVMIntPredicate::LLVMIntEQ => IntPredicate::EQ,
@@ -104,7 +100,6 @@ impl IntPredicate {
 }
 
 impl FPPredicate {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm(pred: LLVMRealPredicate) -> Self {
         match pred {
             LLVMRealPredicate::LLVMRealPredicateFalse => FPPredicate::False,

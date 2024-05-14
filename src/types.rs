@@ -85,7 +85,7 @@ pub enum Type {
 }
 
 #[cfg(feature = "json")]
-use serde::de::{self, Deserialize, Deserializer, MapAccess, SeqAccess, Visitor};
+use serde::de::{self, Deserialize, Deserializer, MapAccess, Visitor};
 
 #[cfg(feature = "json")]
 impl<'de> Deserialize<'de> for Type {
@@ -160,7 +160,7 @@ impl<'de> Deserialize<'de> for Type {
                 V: MapAccess<'de>,
             {
                 let mut ty = Type::VoidType;
-                let mut name = "";
+                //let mut name = "";
 
                 while let Some(key) = map.next_key::<&str>()? {
                     match key {
@@ -183,10 +183,11 @@ impl<'de> Deserialize<'de> for Type {
                             };
                         },
                         "Name" => {
-                            name = map.next_value::<&str>()?;
+                            /*name =*/
+                            map.next_value::<&str>()?;
                         },
                         "Subtypes" => {
-                            map.next_value::<Vec<Type>>();
+                            map.next_value::<Vec<Type>>()?;
                         },
                         _ => unreachable!(),
                     }
@@ -459,7 +460,6 @@ pub(crate) struct TypesBuilder {
     target_ext_type: TypeRef,
     /// internal cache of already-seen `LLVMTypeRef`s so we can quickly produce
     /// the corresponding `TypeRef` without re-parsing the type
-    #[cfg(not(feature = "no-llvm"))]
     llvm_type_map: HashMap<LLVMTypeRef, TypeRef>,
 }
 
@@ -484,7 +484,6 @@ impl TypesBuilder {
             token_type: TypeRef::new(Type::TokenType),
             #[cfg(feature = "llvm-16-or-greater")]
             target_ext_type: TypeRef::new(Type::TargetExtType),
-            #[cfg(not(feature = "no-llvm"))]
             llvm_type_map: HashMap::new(),
         }
     }
@@ -1149,16 +1148,12 @@ impl<K: Eq + Hash + Clone> TypeCache<K> {
 // from_llvm //
 // ********* //
 
-#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMTypeKind;
 use std::collections::hash_map::Entry;
 
 impl TypesBuilder {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn type_from_llvm_ref(&mut self, ty: LLVMTypeRef) -> TypeRef {
         if let Some(typeref) = self.llvm_type_map.get(&ty) {
             return typeref.clone();
@@ -1168,7 +1163,6 @@ impl TypesBuilder {
         typeref
     }
 
-    #[cfg(not(feature = "no-llvm"))]
     fn parse_type_from_llvm_ref(&mut self, ty: LLVMTypeRef) -> TypeRef {
         let kind = unsafe { LLVMGetTypeKind(ty) };
         match kind {
@@ -1293,7 +1287,6 @@ impl TypesBuilder {
     /// creates an actual `StructType`, regardless of whether the struct is named or not
     ///
     /// Caller is responsible for ensuring that `ty` is not an opaque struct type
-    #[cfg(not(feature = "no-llvm"))]
     fn struct_type_from_llvm_ref(&mut self, ty: LLVMTypeRef) -> TypeRef {
         if unsafe { LLVMIsOpaqueStruct(ty) } != 0 {
             panic!(

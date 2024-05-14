@@ -8,11 +8,11 @@ use crate::terminator::Terminator;
 #[derive(PartialEq, Clone, Debug)]
 #[cfg_attr(feature = "json", derive(serde::Deserialize))]
 pub struct BasicBlock {
-    #[serde(rename = "Name")]
+    #[cfg_attr(feature = "json", serde(rename = "Name"))]
     pub name: Name,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub instrs: Vec<Instruction>,
-    #[serde(skip)]
+    #[cfg_attr(feature = "json", serde(skip))]
     pub term: Terminator,
 }
 
@@ -32,19 +32,14 @@ impl BasicBlock {
 // from_llvm //
 // ********* //
 
-#[cfg(not(feature = "no-llvm"))]
 use crate::from_llvm::*;
 use crate::function::FunctionContext;
-#[cfg(not(feature = "no-llvm"))]
 use crate::llvm_sys::*;
 use crate::module::ModuleContext;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMOpcode;
-#[cfg(not(feature = "no-llvm"))]
 use llvm_sys::LLVMTypeKind::LLVMVoidTypeKind;
 
 impl BasicBlock {
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn from_llvm_ref(
         bb: LLVMBasicBlockRef,
         ctx: &mut ModuleContext,
@@ -73,7 +68,6 @@ impl BasicBlock {
     }
 
     // Returns the name of the basic block and a vec of (instruction/terminator, name) pairs
-    #[cfg(not(feature = "no-llvm"))]
     pub(crate) fn first_pass_names(
         bb: LLVMBasicBlockRef,
         ctr: &mut usize,
@@ -98,7 +92,6 @@ impl BasicBlock {
 }
 
 // Given only the LLVMValueRef for an Instruction, determine whether it needs a name
-#[cfg(not(feature = "no-llvm"))]
 fn needs_name(inst: LLVMValueRef) -> bool {
     if unsafe { !get_value_name(inst).is_empty() } {
         return true; // has a string name
@@ -117,7 +110,6 @@ fn needs_name(inst: LLVMValueRef) -> bool {
 }
 
 // Given only the LLVMValueRef for a Terminator, determine whether it needs a name
-#[cfg(not(feature = "no-llvm"))]
 fn term_needs_name(term: LLVMValueRef) -> bool {
     if unsafe { !get_value_name(term).is_empty() } {
         return true; // has a string name

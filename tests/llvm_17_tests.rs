@@ -9,7 +9,6 @@ macro_rules! llvm_ll_test {
     ($path:expr, $func:ident) => {
         #[test]
         #[allow(non_snake_case)]
-        #[cfg(not(feature = "no-llvm"))]
         fn $func() {
             let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
             let path = Path::new($path);
@@ -28,7 +27,6 @@ use llvm_ir::instruction;
 use std::convert::TryInto;
 
 #[test]
-#[cfg(not(feature = "no-llvm"))]
 fn nuw_nsw_exact() {
     let _ = env_logger::builder().is_test(true).try_init(); // capture log messages with test harness
     let path = Path::new("tests/llvm_bc/compatibility-as-of-llvm-17.ll");

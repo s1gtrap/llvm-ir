@@ -9,15 +9,7 @@ use llvm_ir::terminator;
 use llvm_ir::types::{FPType, NamedStructDef, Typed};
 use llvm_ir::HasDebugLoc;
 use llvm_ir::{
-    Constant,
-    ConstantRef,
-    Instruction,
-    IntPredicate,
-    Module,
-    Name,
-    Operand,
-    Terminator,
-    Type,
+    Constant, ConstantRef, Instruction, IntPredicate, Module, Name, Operand, Terminator, Type,
 };
 use std::convert::TryInto;
 use std::path::{Path, PathBuf};
@@ -1912,7 +1904,7 @@ fn rustbcg() {
         .expect("Failed to find bb 'start'");
 
     // the first 17 instructions in the function should not have debuglocs - they are just setting up the stack frame
-    for i in 0 .. 17 {
+    for i in 0..17 {
         assert!(startbb.instrs[i].get_debug_loc().is_none());
     }
 
@@ -2107,7 +2099,7 @@ fn simple_linked_list_g() {
         .ends_with(debug_directory_suffix));
 
     // the first seven instructions shouldn't have debuglocs - they are just setting up the stack frame
-    for i in 0 .. 7 {
+    for i in 0..7 {
         assert!(func.basic_blocks[0].instrs[i].get_debug_loc().is_none());
     }
 

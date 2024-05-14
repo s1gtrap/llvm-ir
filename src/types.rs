@@ -166,20 +166,20 @@ impl<'de> Deserialize<'de> for Type {
                     match key {
                         "ID" => {
                             ty = match map.next_value::<usize>()? {
-                                i @ (0 .. 7) => todo!("{i}"),
+                                i @ (0..=6) => todo!("{i}"),
                                 7 => Type::VoidType,
                                 8 => Type::LabelType,
-                                i @ (9 .. 13) => todo!("{i}"),
+                                i @ (9..=12) => todo!("{i}"),
                                 13 => Type::IntegerType {
                                     bits: 32, // TODO: impl
                                 },
-                                i @ (14 .. 15) => todo!("{i}"),
+                                i @ (14..=14) => todo!("{i}"),
                                 15 => Type::PointerType {
                                     #[cfg(feature = "llvm-14-or-lower")]
                                     pointee_type: TypeRef(Arc::new(Type::VoidType)), // TODO: impl
                                     addr_space: AddrSpace::default(), // TODO: impl
                                 },
-                                i @ (16 ..) => todo!("{i}"),
+                                i @ (16..) => todo!("{i}"),
                             };
                         },
                         "Name" => {

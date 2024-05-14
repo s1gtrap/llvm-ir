@@ -446,9 +446,11 @@ fn DILocation_implicit_code_extra_checks() {
     assert_eq!(ival2.indices[0], 1);
     assert_eq!(ival2.dest, Name::from("lpad.val6"));
     #[cfg(feature = "llvm-14-or-lower")]
-    let expected_fmt = "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)";
+    let expected_fmt =
+        "%lpad.val6 = insertvalue { i8*, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)";
     #[cfg(feature = "llvm-15-or-greater")]
-    let expected_fmt = "%lpad.val6 = insertvalue { ptr, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)";
+    let expected_fmt =
+        "%lpad.val6 = insertvalue { ptr, i32 } %lpad.val, i32 %sel5, 1 (with debugloc)";
     assert_eq!(&format!("{}", ival2), expected_fmt);
     let resume: &terminator::Resume = &ehresume
         .term
